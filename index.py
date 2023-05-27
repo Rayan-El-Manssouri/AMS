@@ -1,34 +1,80 @@
-from flask import Flask, request, render_template
+import io
 
-app = Flask(__name__)
+print("Bienvenue sur AMS !")
+print("Quelle option souhaitez-vous ?")
+print("1. Générer un fichier Ajout.js (adapté pour React)")
+print("2. Générer un fichier Suppr.js (adapté pour React)")
+print("3. Générer un fichier Modif.js (adapté pour React)")
+print("4. Tous les fichiers")
+print("5. Quitter")
+print("6. Personnaliser")
+print("7. Aide")
 
-@app.route('/ajouter', methods=['GET', 'POST'])
-def ajouter():
-    if request.method == 'POST':
-        # Récupérer les valeurs soumises par le formulaire
-        # et les enregistrer dans le fichier texte correspondant
-        # à la table ou à l'entité que vous souhaitez modifier.
-        # Vous pouvez utiliser la bibliothèque Python 'fileinput'
-        # pour faciliter la manipulation des fichiers texte.
+choix = input("Votre choix : ")
 
-        # Rediriger vers une page de confirmation ou de succès
-        return render_template('confirmation.html')
+if choix == "1":
+    print("Générer un fichier Ajout.js (adapté pour React)")
+    continuer = "O"
+    objets = []
+    while continuer == "O":
+        nom_champ = input("Entrez le nom du champ : ")
+        type_champ = input("Entrez le type du champ : ")
+        objets.append((nom_champ, type_champ))
+        continuer = input("Voulez-vous ajouter un autre champ ? (O/N) : ")
 
-    # Générer le formulaire d'ajout en fonction des champs définis
-    champs = []
+    nom_fichier = input("Entrez le nom du fichier : ")
 
-    while True:
-        champ = {}
-        champ['nom'] = input("Quel est le nom du champ ? ")
-        champ['type'] = input("Quel est le type du champ ? ")
-        champ['aligne'] = input("Voulez-vous que ce champ soit aligné ? (Oui/Non) ")
-        champs.append(champ)
+    with io.open(nom_fichier + ".js", "w", encoding="utf-8") as file:
+        file.write(f"import React, {{usestate}} from 'react';\n")
+        file.write("import React from 'react';\n")
+        file.write("const " + nom_fichier + " = () => {\n")
+        for champ, valeur in objets:
+            if valeur == "radio":
+                file.write(f"    const [{champ}, set{champ}] = useState('');\n")
+        file.write(f"    const nouveau{nom_fichier} = " + "{\n")
+        for champ, valeur in objets:
+            file.write(f"        {champ},\n")
+        file.write("    };\n\n")
+        file.write(f"    fetch('http://localhost:5000/ajouter-{nom_fichier}', {{\n")
+        file.write("        method: 'POST',\n")
+        file.write("        headers: {\n")
+        file.write("            'Content-Type': 'application/json'\n")
+        file.write("        },\n")
+        file.write(f"        body: JSON.stringify(nouveau{nom_fichier})\n")
+        file.write("    })\n")
+        file.write("        .then(response => response.json())\n")
+        file.write("        .then(data => {\n")
+        file.write("            console.log('Success:', data);\n")
+        file.write("        })\n")
+        file.write("        .catch((error) => {\n")
+        file.write("            console.error('Error:', error);\n")
+        file.write("        });\n\n")
+        file.write("    return (\n")
+        file.write("        <div>\n")
+        for champ, valeur in objets:
+            if valeur == "radio":
+                file.write(f"           <label>\n")
+                file.write(f"               {champ}\n")
+                file.write(f"               <input type='radio' name='{champ}' value='{champ}' onChange={{e => set{champ}(e.target.value)}} />\n")
+                file.write(f"           </label>\n")
+        file.write("        </div>\n")
+        file.write("    );\n")
+        file.write("};\n\n")
+        file.write("export default " + nom_fichier + ";")
 
-        autre_champ = input("Y a-t-il d'autres champs ? (Oui/Non) ")
-        if autre_champ.lower() != 'oui':
-            break
+    print("Fichier", nom_fichier + ".js créé !")
 
-    return render_template('ajouter.html', champs=champs)
-
-if __name__ == '__main__':
-    app.run()
+elif choix == "2":
+    print("Générer un fichier Suppr.js (adapté pour React)")
+elif choix == "3":
+    print("Générer un fichier Modif.js (adapté pour React)")
+elif choix == "4":
+    print("Tous les fichiers")
+elif choix == "5":
+    print("Quitter")
+elif choix == "6":
+    print("Personnaliser")
+elif choix == "7":
+    print("Aide")
+else:
+    print("Choix invalide. Veuillez sélectionner une option valide.")
